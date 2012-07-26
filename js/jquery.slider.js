@@ -196,11 +196,12 @@
   };
 
   jSlider.prototype.init = function( node, settings ){
-    this.settings = $.extend(true, {}, OPTIONS.settings, settings ? settings : {});
-    
+
     // obj.sliderHandler = this;
     this.inputNode = $( node ).hide();
-    						
+
+    this.settings = $.extend(true, {}, OPTIONS.settings, this.getMarkupSettings(), settings ? settings : {});
+
 		this.settings.interval = this.settings.to-this.settings.from;
 		this.settings.value = this.inputNode.attr("value");
 		
@@ -216,6 +217,42 @@
 		this.o = {};
 
     this.create();
+  };
+
+  jSlider.prototype.getMarkupSettings = function(){
+    var self = this;
+    function intAttr(name) {
+      var value = self.inputNode.attr(name);
+      return (value === undefined) ? value : +value;
+    }
+    function boolAttr(name) {
+      var value = self.inputNode.attr(name);
+      return (value === undefined) ? value : $.trim(value).toLowerCase() === "true";
+    }
+
+    var format = this.inputNode.attr('data-format');
+    var locale = this.inputNode.attr('data-locale');
+    var formatHash;
+    if (format !== undefined || locale !== undefined)
+      format = {format: format, locale: locale};
+
+    var scale = this.inputNode.attr('data-scale');
+    if (scale !== undefined) {
+      scale = scale.split(/;/);
+    }
+
+    return {
+      from: intAttr('data-from'),
+      to: intAttr('data-to'),
+      step: intAttr('data-step'),
+      smooth: boolAttr('data-smooth'),
+      limits: boolAttr('data-limits'),
+      round: intAttr('data-round'),
+      format: format,
+      dimension: this.inputNode.attr('data-dimension'),
+      skin: this.inputNode.attr('data-skin'),
+      scale: scale
+    };
   };
   
   jSlider.prototype.onstatechange = function(){
@@ -532,6 +569,7 @@
     var value = this.getValue();
     this.inputNode.attr( "value", value );
     this.onstatechange.call( this, value );
+    this.inputNode.trigger("change");
   };
 
   jSlider.prototype.getValue = function(){
@@ -614,8 +652,12 @@
   
 	jSlider.prototype.round = function( value ){
     value = Math.round( value / this.settings.step ) * this.settings.step;
-		if( this.settings.round ) value = Math.round( value * Math.pow(10, this.settings.round) ) / Math.pow(10, this.settings.round);
-		else value = Math.round( value );
+		if( this.settings.round && this.settings.round >= 0)
+      value = Math.round( value * Math.pow(10, this.settings.round) ) / Math.pow(10, this.settings.round);
+    else if (this.settings.round && this.settings.round < 0)
+      value = Math.round( value / Math.pow(10, this.settings.round) ) * Math.pow(10, this.settings.round);
+		else
+      value = Math.round( value );
 		return value;
 	};
 	
