@@ -241,13 +241,21 @@
       scale = scale.split(/;/);
     }
 
+    var round = this.inputNode.attr('data-round');
+    if (round !== undefined) {
+      if (isNaN(round))
+        round = boolAttr('data-round');
+      else
+        round = intAttr('data-round');
+    }
+
     return {
       from: intAttr('data-from'),
       to: intAttr('data-to'),
       step: intAttr('data-step'),
       smooth: boolAttr('data-smooth'),
       limits: boolAttr('data-limits'),
-      round: intAttr('data-round'),
+      round: round,
       format: format,
       dimension: this.inputNode.attr('data-dimension'),
       skin: this.inputNode.attr('data-skin'),
@@ -583,6 +591,49 @@
     return value;
   };
 
+  // Returns true if there is room for the all the pointers to
+  // move one step to the right.
+  jSlider.prototype.canStepNext = function() {
+    var self = this;
+    var canStep = true;
+    $.each( this.o.pointers, function(i) {
+      if (self.prcToValue(this.value.prc) + self.settings.step > self.settings.to) {
+        canStep = false;
+        return false;
+      }
+    });
+    return canStep;
+  };
+
+  // Move the pointers one step to the right, if it's possible
+  // to do so without exceeding the upper limit.
+  jSlider.prototype.stepNext = function() {
+    if (!this.canStepNext())
+      return;
+    var self = this;
+
+    $.each( this.o.pointers, function(i) {
+      this.set(self.prcToValue(this.value.prc) + self.settings.step);
+    });
+  };
+
+  jSlider.prototype.resetToStart = function() {
+    var self = this;
+
+    var prcs = $.map( this.o.pointers, function(ptr, i) {
+      return ptr.value.prc;
+    });
+
+    if (prcs.length == 0)
+      return false; // no pointers??
+
+    var minPrc = Math.min.apply(Math, prcs);
+    $.each( this.o.pointers, function(i) {
+      this.set(self.prcToValue(this.value.prc - minPrc));
+    });
+    return true;
+  };
+
   jSlider.prototype.getPrcValue = function(){
     if(!this.is.init) return false;
     var $this = this;
@@ -656,9 +707,10 @@
       value = Math.round( value * Math.pow(10, this.settings.round) ) / Math.pow(10, this.settings.round);
     else if (this.settings.round && this.settings.round < 0)
       value = Math.round( value / Math.pow(10, this.settings.round) ) * Math.pow(10, this.settings.round);
-		else
-      value = Math.round( value );
-		return value;
+    else if (this.settings.round === false)
+		  return value;
+    else
+      return Math.round(value);
 	};
 	
 	jSlider.prototype.nice = function( value ){
