@@ -216,6 +216,9 @@
     };
 		this.o = {};
 
+    // Ref count for suppressing change event
+    this.suppressChangeEvent = 0;
+
     this.create();
   };
 
@@ -265,6 +268,20 @@
   
   jSlider.prototype.onstatechange = function(){
     
+  };
+
+  // Run the given function without allowing change events to be fired
+  // until the end (or possibly later if this function is called
+  // recursively).
+  jSlider.prototype.consolidateChangeEvents = function(func) {
+    this.suppressChangeEvent++;
+    try {
+      func();
+    }
+    finally {
+      this.suppressChangeEvent--;
+    }
+    this.setValue();
   };
   
   jSlider.prototype.create = function(){
@@ -576,8 +593,10 @@
   jSlider.prototype.setValue = function(){
     var value = this.getValue();
     this.inputNode.attr( "value", value );
-    this.onstatechange.call( this, value );
-    this.inputNode.trigger("change");
+    if (this.suppressChangeEvent == 0) {
+      this.onstatechange.call( this, value );
+      this.inputNode.trigger("change");
+    }
   };
 
   jSlider.prototype.getValue = function(){
@@ -612,8 +631,10 @@
       return;
     var self = this;
 
-    $.each( this.o.pointers, function(i) {
-      this.set(self.prcToValue(this.value.prc) + self.settings.step);
+    this.consolidateChangeEvents(function() {
+      $.each( self.o.pointers, function(i) {
+        this.set(self.prcToValue(this.value.prc) + self.settings.step);
+      });
     });
   };
 
@@ -628,9 +649,13 @@
       return false; // no pointers??
 
     var minPrc = Math.min.apply(Math, prcs);
-    $.each( this.o.pointers, function(i) {
-      this.set(self.prcToValue(this.value.prc - minPrc));
+
+    this.consolidateChangeEvents(function() {
+      $.each( self.o.pointers, function(i) {
+        this.set(self.prcToValue(this.value.prc - minPrc));
+      });
     });
+
     return true;
   };
 
