@@ -77,22 +77,31 @@
 	  var self = this;
 
 	  if( this.supportTouches_ )
-      ptr.get(0).addEventListener( this.events_[ eventType ], handler, false );
+      ptr.get(0).addEventListener( this.touchEvents_[ eventType ], handler, false );
 	  
-	  else
-	    ptr.bind( this.events_[ eventType ], handler );
+    // Always bind mouse events
+    ptr.bind( this.mouseEvents_[ eventType ], handler );
 	};
 	
 	Draggable.prototype._events = function(){
 		var self = this;
 
+    // Note that this reports true on some platforms where the device doesn't
+    // actually support touches, such as QT webkit.
     this.supportTouches_ = 'ontouchend' in document;
-    this.events_ = {
-      "click": this.supportTouches_ ? "touchstart" : "click",
-      "down": this.supportTouches_ ? "touchstart" : "mousedown",
-      "move": this.supportTouches_ ? "touchmove" : "mousemove",
-      "up"  : this.supportTouches_ ? "touchend" : "mouseup"
+    this.mouseEvents_ = {
+      "click": "click",
+      "down" : "mousedown",
+      "move" : "mousemove",
+      "up"   : "mouseup"
     };
+    this.touchEvents_ = {
+      "click": "touchstart",
+      "down" : "touchstart",
+      "move" : "touchmove",
+      "up"   : "touchend"
+    };
+
 
     this._bindEvent( $( document ), "move", function( event ){
 			if( self.is.drag ){
