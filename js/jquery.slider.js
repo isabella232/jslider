@@ -726,17 +726,25 @@
 	  return prc;
 	};
   
-	jSlider.prototype.round = function( value ){
+  jSlider.prototype.round = function( value ){
+    // Use the minimum value as the baseline for rounding
+    value = value - this.settings.from;
     value = Math.round( value / this.settings.step ) * this.settings.step;
-		if( this.settings.round && this.settings.round >= 0)
-      return Math.round( value * Math.pow(10, this.settings.round) ) / Math.pow(10, this.settings.round);
-    else if (this.settings.round && this.settings.round < 0)
-      return Math.round( value / Math.pow(10, this.settings.round) ) * Math.pow(10, this.settings.round);
-    else if (this.settings.round === false)
-		  return value;
-    else
-      return Math.round(value);
-	};
+
+    if( this.settings.round && this.settings.round >= 0) {
+      value = Math.round( value * Math.pow(10, this.settings.round) ) /
+              Math.pow(10, this.settings.round);
+    } else if (this.settings.round && this.settings.round < 0) {
+      value = Math.round( value / Math.pow(10, this.settings.round) ) *
+              Math.pow(10, this.settings.round);
+    } else if (this.settings.round === false) {
+      // Do nothing
+    } else {
+      value = Math.round(value);
+    }
+
+    return value + this.settings.from;
+  };
 	
 	jSlider.prototype.nice = function( value ){
 		value = value.toString().replace(/,/gi, ".").replace(/ /gi, "");;
