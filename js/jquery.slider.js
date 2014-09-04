@@ -729,9 +729,9 @@
 	jSlider.prototype.round = function( value ){
     value = Math.round( value / this.settings.step ) * this.settings.step;
 		if( this.settings.round && this.settings.round >= 0)
-      value = Math.round( value * Math.pow(10, this.settings.round) ) / Math.pow(10, this.settings.round);
+      return Math.round( value * Math.pow(10, this.settings.round) ) / Math.pow(10, this.settings.round);
     else if (this.settings.round && this.settings.round < 0)
-      value = Math.round( value / Math.pow(10, this.settings.round) ) * Math.pow(10, this.settings.round);
+      return Math.round( value / Math.pow(10, this.settings.round) ) * Math.pow(10, this.settings.round);
     else if (this.settings.round === false)
 		  return value;
     else
